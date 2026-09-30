@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LOL 皮肤拼图工坊</title>
+<link rel="stylesheet" href="style.css?v=7">
+</head>
+<body>
+
+<div id="boot" class="boot">
+  <div class="boot-inner">
+    <div class="boot-logo">LOL<span>皮肤拼图工坊</span></div>
+    <div class="boot-bar"><i id="bootBar"></i></div>
+    <div id="bootText" class="boot-text">正在加载本地皮肤数据…</div>
+  </div>
+</div>
+
+<div id="app" class="app" hidden>
+  <header class="topbar">
+    <div class="brand">LOL<span>皮肤拼图工坊</span></div>
+    <nav class="tabs">
+      <button class="tab is-active" data-tab="browse">皮肤图鉴</button>
+      <button class="tab" data-tab="me">我的皮肤</button>
+      <button class="tab" data-tab="collage">拼图生成</button>
+      <a class="tab" href="admin.html">后台</a>
+    </nav>
+    <div class="dbstat" id="dbStat"></div>
+  </header>
+
+  <!-- ================= 皮肤图鉴 ================= -->
+  <main class="page is-active" id="page-browse">
+    <div id="fileWarn" class="file-warn" hidden>
+      <b>请通过本地服务器打开本页面</b>
+      <p>当前是 <code>file://</code> 方式打开，浏览器会拦截数据读取，拼图也无法导出 PNG。</p>
+      <p>请在项目根目录执行：<code>python tools/serve.py</code>，然后访问 <code>http://127.0.0.1:8777/web/</code></p>
+    </div>
+    <div class="toolbar">
+      <input id="q" class="input" type="search" placeholder="搜索英雄 / 皮肤名（支持拼音缩写，如 yn、anni）">
+      <select id="sort" class="input sel">
+        <option value="hero">按英雄顺序</option>
+        <option value="chroma">按炫彩数量</option>
+        <option value="name">按皮肤名称</option>
+      </select>
+      <label class="chk"><input type="checkbox" id="onlyChroma"> 仅看带炫彩的皮肤</label>
+      <span class="spacer"></span>
+      <span class="muted" id="browseCount"></span>
+    </div>
+    <div class="gallery" id="gallery"></div>
+    <div class="more"><button class="btn" id="loadMore" hidden>加载更多</button></div>
+    <div class="chroma-strip" id="chromaStrip" hidden></div>
+  </main>
+
+  <!-- ================= 我的皮肤 ================= -->
+  <main class="page" id="page-me">
+    <section class="drop" id="drop">
+      <input type="file" id="file" accept=".js,.json,.txt,.csv" hidden>
+      <div class="drop-icon">⤴</div>
+      <h2>上传你的账号数据文件</h2>
+      <p>支持 <code>.js</code> / <code>.json</code> / <code>.txt</code> / <code>.csv</code>，内含皮肤 ID 列表即可。</p>
+      <p class="muted">解析在浏览器本地完成，文件不会上传到任何服务器。</p>
+      <button class="btn primary" id="pickFile">选择文件</button>
+      <p class="muted small">也可以把文件直接拖到这里。没有文件？<button class="link" id="demoBtn">载入演示账号</button></p>
+      <div id="parseInfo" class="parse-info" hidden></div>
+    </section>
+
+    <section id="report" hidden>
+      <div class="cards4">
+        <div class="kpi">
+          <span class="kpi-label">皮肤总数</span>
+          <b id="kpiSkin">0</b>
+          <span class="muted" id="kpiSkinSub"></span>
+        </div>
+        <div class="kpi">
+          <span class="kpi-label">炫彩总数</span>
+          <b id="kpiChroma">0</b>
+          <span class="muted" id="kpiChromaSub"></span>
+        </div>
+        <div class="kpi">
+          <span class="kpi-label">收藏评分</span>
+          <b id="kpiScore">0</b>
+          <span class="muted" id="kpiScoreSub"></span>
+        </div>
+        <div class="kpi accent">
+          <span class="kpi-label">账号等级</span>
+          <b id="kpiLevel">—</b>
+          <span class="muted" id="kpiLevelSub"></span>
+        </div>
+      </div>
+
+      <div class="panel-row">
+        <div class="panel">
+          <h3>品质分布</h3>
+          <div id="rarityList" class="bars"></div>
+        </div>
+        <div class="panel">
+          <h3>收藏完成度</h3>
+          <div id="progressList" class="bars"></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3>英雄收藏榜 <span class="muted small">按评分排序，点击展开该英雄全部皮肤</span></h3>
+        <div id="heroRank" class="hero-rank"></div>
+      </div>
+
+      <div class="panel" id="timelinePanel" hidden>
+        <h3>最近获得 <span class="muted small">按账号数据里的获得时间排序</span></h3>
+        <div class="gallery compact" id="timelineGallery"></div>
+      </div>
+
+      <div class="panel">
+        <h3>缺失的皮肤 <span class="muted small" id="missingHint"></span></h3>
+        <div class="gallery compact" id="missingGallery"></div>
+        <div class="more"><button class="btn" id="missingMore" hidden>显示更多缺失皮肤</button></div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ================= 拼图生成 ================= -->
+  <main class="page" id="page-collage">
+    <div class="collage-wrap">
+      <aside class="side">
+        <h3>1. 数据来源</h3>
+        <div class="side-block">
+          <label class="radio"><input type="radio" name="scope" value="owned" checked> 我拥有的皮肤<span class="muted small" id="scopeOwnedHint">（先上传账号数据）</span></label>
+          <label class="radio"><input type="radio" name="scope" value="hero"> 我拥有的，按英雄分组合并</label>
+          <label class="radio"><input type="radio" name="scope" value="legendary"> 我拥有的，仅传说及以上</label>
+          <label class="radio"><input type="radio" name="scope" value="all"> 全图鉴（2126 款全部皮肤）</label>
+        </div>
+
+        <h3>2. 内容</h3>
+        <div class="side-block">
+          <label class="chk"><input type="checkbox" id="optChroma" checked> 包含炫彩</label>
+          <label class="chk"><input type="checkbox" id="optBase"> 包含原皮肤</label>
+          <label class="chk"><input type="checkbox" id="optGroup" checked> 按英雄分组</label>
+          <label class="chk"><input type="checkbox" id="optTag" checked> 显示品质角标</label>
+        </div>
+
+        <h3>3. 版式</h3>
+        <div class="side-block">
+          <label class="row"><span>列数</span><input type="range" id="cols" min="3" max="40" value="8"><b id="colsVal">8</b></label>
+          <label class="row"><span>格子宽</span><input type="range" id="cellW" min="120" max="300" step="10" value="200"><b id="cellWVal">200</b></label>
+          <label class="row"><span>导出倍率</span><input type="range" id="scale" min="1" max="3" step="1" value="1"><b id="scaleVal">1x</b></label>
+          <label class="row"><span>分页</span>
+            <select class="input sel" id="pages">
+              <option value="auto" selected>自动（放不下就分页）</option>
+              <option value="1">1 页</option>
+              <option value="2">2 页</option>
+              <option value="3">3 页</option>
+              <option value="4">4 页</option>
+              <option value="6">6 页</option>
+              <option value="8">8 页</option>
+            </select><b></b>
+          </label>
+          <label class="chk"><input type="checkbox" id="optOptimize" checked> 自动优化列数/格子宽（优先一页放下）</label>
+          <label class="row"><span>标题</span><input class="input" id="title" value="我的皮肤收藏"></label>
+          <label class="row"><span>副标题</span><input class="input" id="subtitle" placeholder="留空自动生成"></label>
+        </div>
+
+        <h3>4. 导出</h3>
+        <div class="side-block">
+          <button class="btn primary block" id="genGrid">生成整齐网格长图</button>
+          <button class="btn block" id="genPoster">生成海报式拼图</button>
+          <div class="muted small" id="sizeHint">—</div>
+        </div>
+      </aside>
+
+      <section class="stage">
+        <div class="stage-head">
+          <div>
+            <b id="stageTitle">拼图预览</b>
+            <span class="muted small" id="stageSub">左侧选择数据来源后点击生成</span>
+          </div>
+          <div class="stage-actions">
+            <span class="page-tabs" id="pageTabs"></span>
+            <button class="btn small" id="zoomOut">－</button>
+            <span class="muted small" id="zoomVal">60%</span>
+            <button class="btn small" id="zoomIn">＋</button>
+            <button class="btn small" id="zoomFit">适应</button>
+            <button class="btn small" id="zoom100">100%</button>
+            <button class="btn primary" id="download" hidden>下载本页 PNG</button>
+            <button class="btn" id="downloadAll" hidden>下载全部页</button>
+          </div>
+        </div>
+        <div class="stage-body" id="stageBody">
+          <div class="empty-hint">
+            <p>选择左侧选项 → 点击「生成整齐网格长图」</p>
+            <p class="muted small">生成后可预览、翻页、缩放、下载 PNG</p>
+          </div>
+        </div>
+        <div class="progress" id="progressBar" hidden><span class="track"><i></i></span><span class="ptext"></span></div>
+      </section>
+    </div>
+  </main>
+</div>
+
+<script src="core.js?v=7"></script>
+<script src="app.js?v=7"></script>
+</body>
+</html>

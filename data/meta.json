@@ -1,0 +1,51 @@
+{
+  "source": "https://game.gtimg.cn/images/lol/act/img/js/skins/skins.js",
+  "heroSource": "https://game.gtimg.cn/images/lol/act/img/js/heroList/hero_list.js",
+  "version": "16.19",
+  "fileTime": "2026-09-22 14:54:59",
+  "generatedAt": "2026-09-30T22:40:43",
+  "stats": {
+    "heroCount": 173,
+    "baseSkinCount": 173,
+    "paidSkinCount": 1953,
+    "skinCount": 2126,
+    "chromaCount": 7032,
+    "totalCount": 9158,
+    "skinsWithChroma": 1047,
+    "missingLoading": 0,
+    "excludedLegacy": 40,
+    "imageTaskCount": 15536,
+    "skinLabels": [
+      {
+        "label": "无",
+        "count": 2126
+      }
+    ],
+    "roleCounts": [
+      {
+        "role": "mage",
+        "count": 75
+      },
+      {
+        "role": "fighter",
+        "count": 61
+      },
+      {
+        "role": "tank",
+        "count": 46
+      },
+      {
+        "role": "assassin",
+        "count": 46
+      },
+      {
+        "role": "support",
+        "count": 43
+      },
+      {
+        "role": "marksman",
+        "count": 33
+      }
+    ]
+  }
+}
